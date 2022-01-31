@@ -1,3 +1,7 @@
+// TODO: Figure out another way to bind this. And get it calling to operation_group
+// Would like to make a separate file to actually house bindings to other parts of the app
+// And keep this file as strictly a basic designer file.
+
 use cpp_core::{Ptr, StaticUpcast};
 use qt_core::{
     slot, QBox, QObject, QPtr,
@@ -40,8 +44,6 @@ macro_rules! argSlot {
         )+
     }
 }
-
-
 
 #[ui_form("../ui/calc.ui")]
 #[allow(non_snake_case)]
