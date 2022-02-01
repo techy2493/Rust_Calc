@@ -2,6 +2,8 @@
 
 use std::env;
 
+use fixed::types::I20F12;
+use processors::simple_processor::SimpleProcessor;
 use qt_core::{q_init_resource};
 use qt_widgets::{QApplication,};
 use cancellation::{CancellationTokenSource};
@@ -20,30 +22,9 @@ fn main() {
     if args.contains(&String::from("--gui")) {
         load_ui();
     } else {
-        let _ = command_line::begin_loop(&cts);
+        //Todo: Use Args to determine processor type
+        let _ = command_line::begin_loop::<SimpleProcessor<i32>, i32>(&cts);
     }
-    
-
-
-
-
-
-
-
-    // // loadUI();
-    // let mut has_not_exited = true;
-    // let mut result: i32;
-    //     while has_not_exited {
-    //     let op = command_line::get_operation();
-    //     let (value, value_text) = command_line::get_number();
-    //     let operation = operation_group::Operation {
-    //         operation_type: op,
-    //         value: value,
-    //         value_text: value_text
-    //     };
-    //     result = calculate();
-    //     println!("New Value Is: {}", result);
-    //}
 }
 
 fn load_ui() {

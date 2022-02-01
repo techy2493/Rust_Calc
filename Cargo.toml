@@ -13,6 +13,7 @@ qt_widgets = "0.5.0"
 qt_ui_tools = "0.5.0"
 paste = "1.0"
 cancellation = "0.1.0"
+fixed = "1.11.0"
 
 [build-dependencies]
 qt_ritual_build = "0.5.0"

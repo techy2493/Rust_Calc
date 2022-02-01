@@ -1,13 +1,13 @@
 use cancellation::{CancellationToken, OperationCanceled};
 use crate::operation_group;
-use crate::processors::{simple_processor:: SimpleProcessor};
+use crate::traits::processor::{Processor, ProcessableNumber};
 
-pub fn get_number() -> (i32, String) {
+pub fn get_number<T: ProcessableNumber>() -> (T, String) {
     let mut text = String::from("Please Enter A Whole Number");
     loop {
         println!("{}", text);
         let line = read_input();
-        let out = line.trim().parse::<i32>();
+        let out = line.trim().parse::<T>();
         match out {
             Err(_) => {text = String::from("Try Again! Only whole integers are valid!"); eprintln!("Invalid Input"); continue;}
             Ok(value) => return (value, line)
@@ -15,21 +15,19 @@ pub fn get_number() -> (i32, String) {
     }
 }
 
-pub fn get_operation() -> operation_group::OperationType {
-    let mut text = String::from("Please Enter an Operation (+, -)");
+pub fn get_operation<T: Processor<T, O>, O: ProcessableNumber>() -> operation_group::OperationType {
+    let mut text = format!("Please Enter an Operation ({})", T::get_valid_operations_string());
     loop {
         println!("{}", text);
         let line = read_input();
-        match line.as_str() {
-            "+" =>  break operation_group::OperationType::Add,
-            "-" => break operation_group::OperationType::Substract,
-            _ => {text = String::from("Try Again! Only + and - are valid operators!"); eprintln!("Invalid Input"); continue;}
+        match T::match_operation(line) {
+            Ok(op) => break op,
+            Err(_) => {text = format!("Try Again! Only {} are valid operators!", T::get_valid_operations_string())}
         }
-        
     }
 }
 
-pub fn print_result(value: i32) {
+pub fn print_result(value: String) {
     println!("The result of the last operation is: {}", value);
 }
 
@@ -37,15 +35,14 @@ pub fn print_calc_error(error: String) {
     eprintln!("An error occured while calculating your result: \n {}", error)
 }
 
-pub fn begin_loop(ct: &CancellationToken) -> Result<(), OperationCanceled>{
-    // Todo, implement a switch for processor types.
-    let op_group = operation_group::OperationGroup::<SimpleProcessor>::new();
+pub fn begin_loop<T: Processor<T, O>, O: ProcessableNumber>(ct: &CancellationToken) -> Result<(), OperationCanceled>{
+    let op_group = operation_group::OperationGroup::<T, O>::new();
     let loop_result = loop {
         if let Err(_) = ct.result() {
             break Err(OperationCanceled)
         }
 
-        let op = get_operation();
+        let op = get_operation::<T, O>();
         let (value, value_text) = get_number();
         op_group.add_operation(operation_group::Operation {
             operation_type: op,
@@ -54,7 +51,7 @@ pub fn begin_loop(ct: &CancellationToken) -> Result<(), OperationCanceled>{
         });
         match op_group.calculate() {
             Err(error) => print_calc_error(error),
-            Ok(result) => print_result(result)
+            Ok(result) => print_result(result.to_string())
         }
     };
     drop(op_group);

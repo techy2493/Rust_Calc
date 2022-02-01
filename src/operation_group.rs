@@ -1,37 +1,46 @@
 use std::{rc::Rc, cell::RefCell};
-use crate::traits::{newable::Newable, processor::Processor};
+use crate::traits::{processor::{Processor, ProcessableNumber}};
+
+#[derive(Clone, Copy)]
+#[derive(PartialEq)]
 pub enum OperationType {
     Invalid,
     Add,
-    Substract
+    Substract,
+    Divide,
+    Multiply
 }
-
-pub struct Operation {
-    pub value: i32,
+#[derive(Clone)]
+pub struct Operation<O: ProcessableNumber> {
+    pub value: O,
     pub value_text: String,
     pub operation_type: OperationType
 }
 
-pub struct OperationGroup<T: Newable + Processor> {
-    operations: RefCell<Vec<Operation>>,
+pub struct OperationGroup<T: Processor<T, O>, O: ProcessableNumber> {
+    operations: RefCell<Vec<Operation<O>>>,
     processor: T
 }
 
-impl<T: Newable + Processor> OperationGroup<T> {
+impl<T: Processor<T, O>, O: ProcessableNumber> OperationGroup<T, O> {
     pub fn new() -> Rc<Self> {
-        let this = Rc::new(OperationGroup::<T> {
-            operations: RefCell::new(Vec::<Operation>::new()),
+        let this = Rc::new(OperationGroup::<T, O> {
+            operations: RefCell::new(Vec::<Operation<O>>::new()),
             processor: T::new()
         });
         this
     }
 
-    pub fn add_operation(self: &Self, op: Operation) {
+    pub fn add_operation(self: &Self, op: Operation<O>) {
         self.operations.borrow_mut().push(op);
     }
 
-    pub fn calculate(self: &Self) -> Result<i32, String>
+    pub fn calculate(self: &Self) -> Result<O, String>
     {
-        self.processor.process()
+        self.processor.process(self)
+    }
+
+    pub fn get_operations(self: &Self) -> Vec<Operation<O>> {
+        self.operations.borrow().clone()
     }
 }
