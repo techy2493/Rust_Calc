@@ -2,7 +2,9 @@ use cancellation::{CancellationToken, OperationCanceled};
 use crate::operation_group;
 use crate::traits::processor::{Processor, ProcessableNumber};
 
-pub fn get_number<T: ProcessableNumber>() -> (T, String) {
+pub fn get_number<T>() -> (T, String) where
+T: ProcessableNumber
+{
     let mut text = String::from("Please Enter A Whole Number");
     loop {
         println!("{}", text);
@@ -15,7 +17,10 @@ pub fn get_number<T: ProcessableNumber>() -> (T, String) {
     }
 }
 
-pub fn get_operation<T: Processor<T, O>, O: ProcessableNumber>() -> operation_group::OperationType {
+pub fn get_operation<T, O>() -> operation_group::OperationType where
+T: Processor<T, O>,
+O: ProcessableNumber
+{
     let mut text = format!("Please Enter an Operation ({})", T::get_valid_operations_string());
     loop {
         println!("{}", text);
@@ -35,10 +40,13 @@ pub fn print_calc_error(error: String) {
     eprintln!("An error occured while calculating your result: \n {}", error)
 }
 
-pub fn begin_loop<T: Processor<T, O>, O: ProcessableNumber>(ct: &CancellationToken) -> Result<(), OperationCanceled>{
-    let op_group = operation_group::OperationGroup::<T, O>::new();
-    let loop_result = loop {
-        if let Err(_) = ct.result() {
+pub fn begin_loop<T, O:>(ct: &CancellationToken) -> Result<(), OperationCanceled>  where
+T: Processor<T, O>,
+O: ProcessableNumber
+{
+    let mut op_group = operation_group::OperationGroup::<T, O>::new();
+    loop {
+        if ct.result().is_err() {
             break Err(OperationCanceled)
         }
 
@@ -46,16 +54,14 @@ pub fn begin_loop<T: Processor<T, O>, O: ProcessableNumber>(ct: &CancellationTok
         let (value, value_text) = get_number();
         op_group.add_operation(operation_group::Operation {
             operation_type: op,
-            value: value,
-            value_text: value_text
+            value,
+            value_text
         });
         match op_group.calculate() {
             Err(error) => print_calc_error(error),
             Ok(result) => print_result(result.to_string())
         }
-    };
-    drop(op_group);
-    return loop_result;
+    }
 }
  
 fn read_input() -> String {

@@ -11,7 +11,7 @@ use qt_gui::{QStandardItemModel};
 use qt_ui_tools::ui_form;
 use qt_widgets::{QPushButton, QWidget, QLineEdit, QAction};
 use std::{rc::Rc, cell::RefCell};
-use paste;
+//use paste;
 
 macro_rules! makeConnect {
     ($self:ident, $ob:ident, $func:ident) => {
@@ -169,4 +169,3 @@ impl CalcApp {
         }
     }
 }
-

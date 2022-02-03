@@ -1,29 +1,23 @@
 use crate::traits::processor::ProcessableNumber;
-use crate::traits::{newable::Newable, processor::Processor};
+use crate::traits::{processor::Processor};
 use crate::operation_group::{OperationGroup, OperationType};
+use std::marker::PhantomData;
 
-pub struct SimpleProcessor<T: ProcessableNumber > {
-    _last_value: T
+pub struct SimpleProcessor<T> where
+T: ProcessableNumber
+{
+    processor_data_type: PhantomData<T>
 }
 
-impl<T: ProcessableNumber> Newable for SimpleProcessor<T> {
-    fn new() -> Self {
-        return SimpleProcessor::<T> { 
-            _last_value: match "0".parse::<T>() {
-                Ok(val) => val,
-                Err(_) => panic!("An error occured instantiating the calculator. E1")
-            }
-        }
-    }
-}
-
-impl<T: ProcessableNumber>  Processor<SimpleProcessor<T>, T> for SimpleProcessor<T> {
-    fn process(self: &Self, group: &OperationGroup<SimpleProcessor<T>, T>) -> Result<T, String> {
+impl<T>  Processor<SimpleProcessor<T>, T> for SimpleProcessor<T>  where 
+T: ProcessableNumber
+{
+    fn process(group: &OperationGroup<SimpleProcessor<T>, T>) -> Result<T, String> {
         let mut val: T =  match "0".parse::<T>() {
             Ok(val) => val,
             Err(_) => panic!("An error occured while calculating. E2")
         };
-        for (i, op) in group.get_operations().iter().enumerate() {
+        for (_, op) in group.get_operations().iter().enumerate() {
             match op.operation_type {
                 OperationType::Add => val += op.value,
                 OperationType::Substract => val -= op.value,
@@ -39,18 +33,20 @@ impl<T: ProcessableNumber>  Processor<SimpleProcessor<T>, T> for SimpleProcessor
         vec![OperationType::Add, OperationType::Substract]
     }
 
-    fn match_operation(op_string: String) -> Result<OperationType, ()> {
+    fn match_operation(op_string: String) -> Result<OperationType, String> {
         match op_string.as_str() {
             "+" => Ok(OperationType::Add),
             "-" => Ok(OperationType::Substract),
             "/" => Ok(OperationType::Divide),
             "*" => Ok(OperationType::Multiply),
-            _ => Err(())
+            _ => Err(format!("Could not handle operation type {}", op_string))
         }
     }
 
     fn get_valid_operations_string() -> String {
         String::from("+, -, *, and /")
     }
+
+
 }
 

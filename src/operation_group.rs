@@ -1,5 +1,5 @@
-use std::{rc::Rc, cell::RefCell};
 use crate::traits::{processor::{Processor, ProcessableNumber}};
+use std::marker::PhantomData;
 
 #[derive(Clone, Copy)]
 #[derive(PartialEq)]
@@ -11,36 +11,50 @@ pub enum OperationType {
     Multiply
 }
 #[derive(Clone)]
-pub struct Operation<O: ProcessableNumber> {
+pub struct Operation<O> where
+O: ProcessableNumber
+{
     pub value: O,
     pub value_text: String,
     pub operation_type: OperationType
 }
 
-pub struct OperationGroup<T: Processor<T, O>, O: ProcessableNumber> {
-    operations: RefCell<Vec<Operation<O>>>,
-    processor: T
+pub struct OperationGroup<T, O> where
+T: Processor<T, O>,
+O: ProcessableNumber
+{
+    operations: Vec<Operation<O>>,
+    processor_data_type: PhantomData<T>
+}
+impl<T, O> Default for OperationGroup<T, O> where
+T: Processor<T, O>,
+O: ProcessableNumber
+{
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-impl<T: Processor<T, O>, O: ProcessableNumber> OperationGroup<T, O> {
-    pub fn new() -> Rc<Self> {
-        let this = Rc::new(OperationGroup::<T, O> {
-            operations: RefCell::new(Vec::<Operation<O>>::new()),
-            processor: T::new()
-        });
-        this
+impl<T, O> OperationGroup<T, O> where
+T: Processor<T, O>,
+O: ProcessableNumber {
+    pub fn new() -> Self {
+        OperationGroup::<T, O> {
+            operations: Vec::<Operation<O>>::new(),
+            processor_data_type: PhantomData
+        }
     }
 
-    pub fn add_operation(self: &Self, op: Operation<O>) {
-        self.operations.borrow_mut().push(op);
+    pub fn add_operation(&mut self, op: Operation<O>) {
+        self.operations.push(op);
     }
 
-    pub fn calculate(self: &Self) -> Result<O, String>
+    pub fn calculate(&self) -> Result<O, String>
     {
-        self.processor.process(self)
+        T::process(self)
     }
 
-    pub fn get_operations(self: &Self) -> Vec<Operation<O>> {
-        self.operations.borrow().clone()
+    pub fn get_operations(&self) -> Vec<Operation<O>> {
+        self.operations.clone()
     }
 }
