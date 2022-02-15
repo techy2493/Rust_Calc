@@ -54,7 +54,7 @@ O: ProcessableNumber {
         T::process(self)
     }
 
-    pub fn get_operations(&self) -> Vec<Operation<O>> {
-        self.operations.clone()
+    pub fn get_operations(&self) -> &Vec<Operation<O>> {
+        &self.operations
     }
 }

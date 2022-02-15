@@ -3,9 +3,9 @@
 use std::env;
 
 use processors::simple_processor::SimpleProcessor;
-use qt_core::{q_init_resource};
-use qt_widgets::{QApplication,};
-use cancellation::{CancellationTokenSource};
+use qt_core::q_init_resource;
+use qt_widgets::QApplication;
+use cancellation::CancellationTokenSource;
 mod calc;
 pub mod command_line;
 pub mod operation_group;
